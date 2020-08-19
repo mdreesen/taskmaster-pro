@@ -33,7 +33,6 @@ var loadTasks = function() {
 
     // loop over object properties
     $.each(tasks, function(list, arr) {
-        console.log(list, arr);
         // then loop over sub-array
         arr.forEach(function(task) {
             createTask(task.text, task.date, list);
@@ -45,6 +44,74 @@ var saveTasks = function() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+// THIS SORTS OUT THE TASKS IN THE CARD
+// also places the new card inside a new card as well
+$(".card .list-group").sortable({
+    // this connects with the id's of other elements in the HTML
+    // in this case its the classes of these elements
+    connectWith: $(".card .list-group"),
+    scroll: false,
+    tolerance: "pointer",
+    helper: "clone",
+    activate: function(event) {
+        console.log("activate", this);
+    },
+    deactivate: function(event) {
+        console.log("deactivate", this);
+    },
+    over: function(event) {
+        console.log("over", event.target);
+    },
+    out: function(event) {
+        console.log("out", event.target);
+    },
+    update: function(event) {
+        // array to store the task data in
+        var tempArr = [];
+
+        // loop over current set of children in sortable list
+        $(this).children().each(function() {
+            var text = $(this)
+                .find("p")
+                .text()
+                .trim();
+
+            var date = $(this)
+                .find("span")
+                .text()
+                .trim();
+
+            // add task data to the temp array as an object
+            tempArr.push({
+                text: text,
+                date: date
+            });
+        });
+
+        // trim down list's ID to match object property
+        var arrName = $(this)
+            .attr("id")
+            .replace("list- ", "");
+
+        // update array on tasks object and save
+        tasks[arrName] = tempArr;
+        saveTasks();
+    }
+
+});
+
+$("#trash").droppable({
+    accept: ".card .list-group-item",
+    tolerance: "touch",
+    drop: function(event, ui) {
+        ui.draggable.remove();
+
+        console.log("drop");
+    },
+    over: function(event, ui) {},
+    out: function(event, ui) {}
+});
+
 $(".list-group").on("click", "p", function() {
     // .text() will get the inner text content of the current element
     var text = $(this)
@@ -55,7 +122,7 @@ $(".list-group").on("click", "p", function() {
     var textInput = $("<textarea>")
         .addClass("form-control")
         .val(text);
-    console.log(text);
+    //console.log(text);
     // changes the <p> element to a textInput box
     $(this).replaceWith(textInput);
     // highlights the input box automatically for the user
